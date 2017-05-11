@@ -7,12 +7,17 @@ from reading.user import User
 from reading.user_app_actions import User_App_Actions
 from reading.user_app_installed import User_App_Installed
 
+def f(*args):
+    print(args)
+    print(';'.join([str(v) for v in args]))
+
+def g(func=None, *args):
+    print(*args)
+    print(args)
+    for i in args:
+        print(i)
+    print(func.__name__)
+    f(func.__name__, *args)
 if __name__ == '__main__':
-    ad = Advertisement(Configure.ad_path, debug=True)
-    app = App(Configure.app_categories_path, debug=True)
-    train_set = Dataset(Configure.train_path, debug=True)
-    test_set = Dataset(Configure.test_path, debug=True)
-    position = Position(Configure.position_path, debug=True)
-    user = User(Configure.user_path, debug=True)
-    user_app_actions = User_App_Actions(Configure.user_app_actions_path, debug=True)
-    user_app_installed = User_App_Installed(Configure.user_installedapps_path, debug=True)
+    g(f, 1, 2)
+    print('{0:} {1:0.2f}'.format(0.111111111, 0.12312321))

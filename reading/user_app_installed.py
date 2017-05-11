@@ -12,8 +12,9 @@ class User_App_Installed:
                 break
             tmp = [int(v) for v in line.split(',')]
             userID, appID = tmp
-            self.data[userID] = {'userID': userID,
-                                 'appID': appID}
+            if userID not in self.data:
+                self.data[userID] = list()
+            self.data[userID].append(appID)
         fin.close()
 
     def get_keys(self):
