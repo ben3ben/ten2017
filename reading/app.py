@@ -2,6 +2,7 @@ class App:
     def __init__(self, path, debug=False):
         self.debug = debug
         self.data = dict()
+        self.dataset_app_cat = dict()
         self.read(path)
 
     def read(self, path):
@@ -24,3 +25,11 @@ class App:
 
     def exists(self, key):
         return key in self.data
+
+    def add_dataset(self, record, appCategory):
+        if appCategory not in self.dataset_app_cat:
+            self.dataset_app_cat[appCategory] = list()
+        self.dataset_app_cat[appCategory].append(record)
+
+    def get_dataset(self, appCategory):
+        return self.dataset_app_cat[appCategory]

@@ -23,13 +23,16 @@ if __name__ == '__main__':
     user_app_actions = User_App_Actions(Configure.user_app_actions_path, debug=debug)
     # user_app_installed = User_App_Installed(Configure.user_installedapps_path, debug=debug)
     data_set.add_to_position(position)
-    dmatrix = DMatrix(user, data_set, position)
+    data_set.add_to_advertisement(ad)
+    data_set.add_to_app_cat(ad, app)
+
+    dmatrix = DMatrix(user, data_set, position, ad, app, user_app_actions)
 
     print('generate train...')
-    # train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t)
-    train = dmatrix.run(280000, 300000)
+    # train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t, 'train')
+    train = dmatrix.run(280000, 300000, 'train')
     print('generate test...')
-    test = dmatrix.run(Configure.test_begin_t, Configure.test_end_t)
+    test = dmatrix.run(Configure.test_begin_t, Configure.test_end_t, 'train')
 
 
     # print('feature names :', train['feature_names'])
@@ -42,9 +45,9 @@ if __name__ == '__main__':
     dtrain = xgb.DMatrix(train['features'], train['labels'], feature_names=train['feature_names'])
     dtest = xgb.DMatrix(test['features'], test['labels'], feature_names=train['feature_names'])
     param = {'booster': 'gbtree',
-             'max_depth': 5,
+             'max_depth': 6,
              'min_child_weight': 10,
-             'learning_rate': 0.02,
+             'learning_rate': 0.03,
              'subsample': 0.9,
              'colsample_bytree': 0.9,
              'objective': 'reg:logistic',
@@ -57,6 +60,7 @@ if __name__ == '__main__':
     # xgb.cv(param, dtrain, num_round, nfold=10, verbose_eval=True, show_stdv=False, shuffle=True)
     # # exit()
     bst = xgb.train(param, dtrain, num_round, evallist, feval=evalerror, early_stopping_rounds=100)
+    bst.save_model(Configure.xgb_model_file)
 
     feature_importance = xgb_feature_importance(bst, train['feature_names'])
     fout = open(Configure.xgb_feature_importance, 'w')
@@ -71,7 +75,7 @@ if __name__ == '__main__':
     del train
     del test
     print('generate submit...')
-    submit = dmatrix.run(Configure.submit_begin_t, Configure.submit_end_t)
+    submit = dmatrix.run(Configure.submit_begin_t, Configure.submit_end_t, 'train')
     dsubmit = xgb.DMatrix(submit['features'], feature_names=submit['feature_names'])
     submission = bst.predict(dsubmit)
     submit_file(submit['instanceIDs'], submission, Configure.submission)

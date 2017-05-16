@@ -1,4 +1,6 @@
 from reading.position import Position
+from reading.advertisement import Advertisement
+from reading.app import App
 
 
 class Dataset:
@@ -30,9 +32,31 @@ class Dataset:
             self.data_by_userid[d['userID']].append(d)
         fin.close()
 
+    def output_by_userid(self, path):
+        fout = open(path, 'w')
+        headers = ['label', 'clickTime', 'conversionTime', 'creativeID', 'userID', 'positionID', 'connectionType',
+                   'telecomsOperator']
+        for userid in self.data_by_userid.keys():
+            for record in self.data_by_userid[userid]:
+                s = [record[h] if h in record else -1 for h in headers]
+                s = ','.join([str(v) for v in s])
+                fout.write(s + '\n')
+        fout.close()
+
     def add_to_position(self, position: Position):
         for record in self.data_list:
             position.add_dataset(record)
+
+    def add_to_advertisement(self, ad: Advertisement):
+        for record in self.data_list:
+            ad.add_dataset(record)
+
+    def add_to_app_cat(self, ad: Advertisement, app: App):
+        for record in self.data_list:
+            creativeID = record['creativeID']
+            appID = ad.get_value(creativeID)['appID']
+            appCategory = app.get_value(appID)['appCategory']
+            app.add_dataset(record, appCategory)
 
     def get_data_list(self):
         return self.data_list

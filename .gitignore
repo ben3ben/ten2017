@@ -3,4 +3,6 @@
 .idea
 *.pyc
 *.zip
+*.model
+*.txt
 __pycache__

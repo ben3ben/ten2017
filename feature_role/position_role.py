@@ -1,14 +1,30 @@
+from reading.dataset import Dataset
 from reading.position import Position
 from conf.configure import Configure
-
+from handle.handle import handle_correlate_to_vec
 
 class Position_Role:
     flag = False
     fea_names = list()
 
-    def __init__(self, position):
+    def __init__(self, data_set, position):
+        self.data_set = data_set  # type: Dataset
         self.position = position  # type: Position
+        self.position_corr = {'train': self.read_correlate(Configure.position_correlate['train']),
+                              'test': self.read_correlate(Configure.position_correlate['test']),
+                              'submit': self.read_correlate(Configure.position_correlate['submit'])}
         self.fea_set = dict()
+
+    def read_correlate(self, path):
+        result = dict()
+        fin = open(path)
+        for line in fin:
+            tmp = [int(v) for v in line.strip().split(',')]
+            if tmp[0] not in result:
+                result[tmp[0]] = dict()
+            result[tmp[0]][tmp[1]] = tmp[2:]
+        fin.close()
+        return result
 
     def get_fea_names(self):
         return Position_Role.fea_names
@@ -68,11 +84,17 @@ class Position_Role:
         result = [a / (b + a + 1) for a, b in zip(convert, click)]
         return result
 
+    def position_correlate(self, userID, positionID, clickDay, mode):
+        cond_name = 'positionID'
+        dlist = self.data_set.get_value_by_user_id(userID)
+        correlate = self.position_corr[mode]
+        return handle_correlate_to_vec(correlate, dlist, cond_name, positionID, clickDay)
+
     def get_key(self, *args):
         return ';'.join([str(v) for v in args])
 
     def generate(self, func, scope, save, *args):
-        key = self.get_key(func.__name__, *args)
+        key = self.get_key(scope, *args)
         if save and key in self.fea_set:
             return self.fea_set[key]
         fea = func(*args)
@@ -95,5 +117,8 @@ class Position_Role:
                                     positionID, param['clickDay'], Configure.days_windows))
         result.extend(self.generate(self.convert_ratio, 'position_dataset_convert_ratio', True,
                                     positionID, param['clickDay'], Configure.days_windows))
+        # '''correlate features'''
+        # result.extend(self.generate(self.position_correlate, 'position_correlate', True,
+        #                             param['userID'], positionID, param['clickTime'], param['mode']))
         Position_Role.flag = True
         return result
