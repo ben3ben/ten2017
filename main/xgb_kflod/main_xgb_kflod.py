@@ -1,4 +1,3 @@
-import xgboost as xgb
 import sys
 sys.path.append('../..')
 from conf.configure import Configure
@@ -12,7 +11,7 @@ from reading.user_app_installed import User_App_Installed
 from feature.dmatrix import DMatrix
 from model.xgb_func import *
 from handle.handle import *
-
+from model.xgb_kflod import Xgb_Kflod
 
 if __name__ == '__main__':
     debug = False
@@ -32,23 +31,16 @@ if __name__ == '__main__':
     dmatrix = DMatrix(user, data_set, position, ad, app, user_app_actions)
 
     print('generate train...')
-    train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t, ratio=1.)
+    train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t)
     # train = dmatrix.run(280000, 300000, 'train')
     train = select_columns(train, Configure.features_erase)
-    print('generate test...')
-    test = dmatrix.run(Configure.test_begin_t, Configure.test_end_t)
-    test = select_columns(test, Configure.features_erase)
-
 
     # print('feature names :', train['feature_names'])
     print('train positive labels : {}\t total labels : {}'.format(sum(train['labels']), len(train['labels'])))
-    print('test positive labels : {}\t total labels : {}'.format(sum(test['labels']), len(test['labels'])))
 
     print('feature names len:', len(train['feature_names']))
     print('train x columns len:', len(train['features'][0]))
     '''xgboost'''
-    dtrain = xgb.DMatrix(train['features'], train['labels'], feature_names=train['feature_names'])
-    dtest = xgb.DMatrix(test['features'], test['labels'], feature_names=test['feature_names'])
     param = {'booster': 'gbtree',
              'max_depth': 6,
              'min_child_weight': 10,
@@ -61,34 +53,21 @@ if __name__ == '__main__':
              'sample_type': 'uniform',
              'normalize_type': 'tree',
              'eval_metric': 'auc'}
-    evallist = [(dtest, 'eval'), (dtrain, 'train')]
-    num_round = 300
-    # xgb.cv(param, dtrain, num_round, nfold=10, verbose_eval=True, show_stdv=False, shuffle=True)
-    # # exit()
-    bst = xgb.train(param, dtrain, num_round, evallist, feval=evalerror, early_stopping_rounds=100)
-    bst.save_model(Configure.xgb_model_file['model'])
-
-    feature_importance = xgb_feature_importance(bst, train['feature_names'])
-    fout = open(Configure.xgb_feature_importance, 'w')
-    fout.write('feature,gain,weight,cover\n')
-    for key in feature_importance:
-        s = feature_importance[key]
-        fout.write('{},{},{},{}\n'.format(key, s['gain'], s['weight'], s['cover']))
-    fout.close()
-
+    bst = Xgb_Kflod(10)
+    bst.fit(param, train)
     '''save train and test result'''
-    pred_train = bst.predict(dtrain)
-    prediction_to_file(train['instanceIDs'], train['labels'], pred_train, Configure.xgb_model_file['train'])
-    pred_test = bst.predict(dtest)
-    prediction_to_file(test['instanceIDs'], test['labels'], pred_test, Configure.xgb_model_file['test'])
-    del dtrain
-    del dtest
+    pred_train = bst.predict(train)
+    prediction_to_file(train['instanceIDs'], train['labels'], pred_train, Configure.xgb_kflod_model_file['train'])
     del train
+    print('generate test...')
+    test = dmatrix.run(Configure.test_begin_t, Configure.test_end_t)
+    test = select_columns(test, Configure.features_erase)
+    pred_test = bst.predict(test)
+    prediction_to_file(test['instanceIDs'], test['labels'], pred_test, Configure.xgb_kflod_model_file['test'])
     del test
     print('generate submit...')
     submit = dmatrix.run(Configure.submit_begin_t, Configure.submit_end_t)
     submit = select_columns(submit, Configure.features_erase)
-    dsubmit = xgb.DMatrix(submit['features'], feature_names=submit['feature_names'])
-    submission = bst.predict(dsubmit)
+    submission = bst.predict(submit)
     submit_file(submit['instanceIDs'], submission, Configure.submission)
-    prediction_to_file(submit['instanceIDs'], submit['labels'], submission, Configure.xgb_model_file['submit'])
+    prediction_to_file(submit['instanceIDs'], submit['labels'], submission, Configure.xgb_kflod_model_file['submit'])

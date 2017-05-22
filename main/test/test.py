@@ -11,10 +11,22 @@ import numpy as np
 
 
 if __name__ == '__main__':
-    s = np.array([[1,2,3],[4,5,6]])
-    c = ['a', 'b', 'd']
-    p = pd.DataFrame(data=s, columns=c)
-    print(p)
-    a = p.describe()
-    a = a.T
-    print(a)
+    a = 1
+    b = 0
+    raise a > b
+    exit()
+    ad = pd.read_csv(Configure.ad_path)
+    data_set = pd.read_csv(Configure.train_path)
+    user = pd.read_csv(Configure.user_path)
+    app = pd.read_csv(Configure.app_categories_path)
+    user_app_actions = pd.read_csv(Configure.user_app_actions_path)
+
+
+    data_train = data_set[data_set['clickTime'] < 290000]
+    data_test = data_set[data_set['clickTime'] >= 290000]
+    user_train = data_train['userID'].drop_duplicates().tolist()
+    user_test = data_test['userID'].drop_duplicates().tolist()
+    print(len(set(user_test) - set(user_train)))
+    # data = data_set.merge(ad, how='inner', on='creativeID')
+    # data = data.merge(user_app_actions, how='inner', on=['userID', 'appID'])
+    # print(data.shape)

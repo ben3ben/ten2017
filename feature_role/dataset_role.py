@@ -1,29 +1,21 @@
 from reading.dataset import Dataset
 from reading.advertisement import Advertisement
+from reading.app import App
 from conf.configure import Configure
 from handle.handle import handle_correlate_to_vec
+import numpy as np
+from handle.handle import delta_time
+
 
 class Dataset_Role:
     flag = False
     fea_names = list()
 
-    def __init__(self, data_set, ad):
+    def __init__(self, data_set, ad, app):
         self.data_set = data_set  # type: Dataset
         self.ad = ad  # type: Advertisement
-        self.creative_corr = {'train': self.read_correlate(Configure.creative_correlate['train']),
-                              'test': self.read_correlate(Configure.creative_correlate['test']),
-                              'submit': self.read_correlate(Configure.creative_correlate['submit'])}
+        self.app = app  # type: App
 
-    def read_correlate(self, path):
-        result = dict()
-        fin = open(path)
-        for line in fin:
-            tmp = [int(v) for v in line.strip().split(',')]
-            if tmp[0] not in result:
-                result[tmp[0]] = dict()
-            result[tmp[0]][tmp[1]] = tmp[2:]
-        fin.close()
-        return result
 
     def get_fea_names(self):
         return Dataset_Role.fea_names
@@ -171,19 +163,13 @@ class Dataset_Role:
         avg_convert_day = _convert / _day if _convert > 0 else 0
         return [_day, avg_click_day, avg_convert_day, _click_one_day - avg_click_day]
 
-    def creative_correlate(self, userID, creativeID, clickDay, mode):
-        cond_name = 'creativeID'
-        dlist = self.data_set.get_value_by_user_id(userID)
-        correlate = self.creative_corr[mode]
-        return handle_correlate_to_vec(correlate, dlist, cond_name, creativeID, clickDay)
-
     def last_appID_operator(self, userID, appID, clickTime):
         dlist = self.data_set.get_value_by_user_id(userID)
         before_total = 0
         before_convert_total = 0
-        before_near = -1
+        before_near = -1e-5
         after_total = 0
-        after_near = -1
+        after_near = -1e-5
         for d in dlist:
             _creative = d['creativeID']
             _clickTime = d['clickTime']
@@ -191,7 +177,7 @@ class Dataset_Role:
             if _clickTime // 10000 > clickTime // 10000:
                 break
             if _app == appID:
-                if _clickTime // 10000 < clickTime // 10000:
+                if _clickTime // 10000 < clickTime // 10000 and d['label'] == 1:
                     before_convert_total += 1
                 if _clickTime < clickTime:
                     before_total += 1
@@ -216,6 +202,34 @@ class Dataset_Role:
             app_set_before.add(_app)
         return [len(app_set_before), len(app_set_oneday)]
 
+    def user_convert_time_len(self, userID, clickDay):
+        s = list()
+        for d in self.data_set.get_value_by_user_id(userID):
+            if d['clickTime'] >= clickDay:
+                break
+            if d['label'] == 1:
+                s.append(delta_time(d['conversionTime'], d['clickTime']))
+        return [np.average(s)] if len(s) > 0 else [-1]
+
+    def user_op_type_ratio(self, userID, clickDay, appID, appPlatform, appCategory):
+        _sum = 0
+        result = [0] * 3
+        for d in self.data_set.get_value_by_user_id(userID):
+            if d['clickTime'] // 10000 > clickDay:
+                break
+            _sum += 1
+            _creativeID = d['creativeID']
+            _appID = self.ad.get_value(_creativeID)['appID']
+            _appPlatform = self.ad.get_value(_creativeID)['appPlatform']
+            _appCategory = self.app.get_value(_appID)['appCategory']
+            result[0] += 1 if _appID == appID else 0
+            result[1] += 1 if _appPlatform == appPlatform else 0
+            result[2] += 1 if _appCategory == appCategory else 0
+        for i in range(len(result)):
+            result[i] = result[i] / _sum if _sum > 0 else 0
+        return result
+
+
     def generate(self, func, scope, *args):
         fea = func(*args)
         if not Dataset_Role.flag:
@@ -231,17 +245,14 @@ class Dataset_Role:
         telecomsOperator = param['telecomsOperator']
         creativeID = param['creativeID']
         appID = param['appID']
+        appPlatform = param['appPlatform']
+        appCategory = param['appCategory']
         dlist = self.data_set.get_value_by_user_id(userID)
         result = list()
         result.extend(self.generate(self.clicktime_to_vec, 'dataset_clicktime', clickTime))
         result.extend(self.generate(self.connectionType_to_vec, 'dataset_connectionType', connectionType))
         result.extend(self.generate(self.telecomsOperator_to_vec, 'dataset_telecomsOperator', telecomsOperator))
-        result.extend(self.generate(self.click_count_operator, 'user_dataset_clickcount',
-                                    dlist, clickTime, Configure.minutes_windows))
-        result.extend(self.generate(self.convert_count_operator, 'user_dataset_convert_count',
-                                    dlist, clickDay, Configure.days_windows))
-        result.extend(self.generate(self.convert_ratio, 'user_dataset_convert_ratio',
-                                    dlist, clickDay, Configure.days_windows))
+
         result.extend(self.generate(self.click_one_day, 'user_dataset_click_one_day',
                                     dlist, param))
         result.extend(self.generate(self.click_in_days, 'user_dataset_click_in_days',
@@ -268,9 +279,9 @@ class Dataset_Role:
         # result.extend(self.generate(self.convert_ratio, 'user_camgaignID_convert_ratio',
         #                             dlist, clickDay, Configure.days_windows, self.equal_camgaignID, param['camgaignID']))
 
-        result.extend(self.generate(self.click_count_operator, 'user_advertiserID_click_count',
-                                    dlist, clickDay, Configure.days_windows, self.equal_advertiserID,
-                                    param['advertiserID']))
+        # result.extend(self.generate(self.click_count_operator, 'user_advertiserID_click_count',
+        #                             dlist, clickDay, Configure.days_windows, self.equal_advertiserID,
+        #                             param['advertiserID']))
         # result.extend(self.generate(self.convert_count_operator, 'user_advertiserID_convert_count',
         #                             dlist, clickDay, Configure.days_windows, self.equal_advertiserID,
         #                             param['advertiserID']))
@@ -288,22 +299,22 @@ class Dataset_Role:
                                     dlist, clickDay, Configure.days_windows, self.equal_appPlatform,
                                     param['appPlatform']))
 
-        result.extend(self.generate(self.click_count_operator, 'user_appID_click_count',
-                                    dlist, clickDay, Configure.days_windows, self.equal_appID,
-                                    param['appID']))
+        # result.extend(self.generate(self.click_count_operator, 'user_appID_click_count',
+        #                             dlist, clickDay, Configure.days_windows, self.equal_appID,
+        #                             param['appID']))
         result.extend(self.generate(self.convert_count_operator, 'user_appID_convert_count',
                                     dlist, clickDay, Configure.days_windows, self.equal_appID,
                                     param['appID']))
         result.extend(self.generate(self.convert_ratio, 'user_appID_convert_ratio',
                                     dlist, clickDay, Configure.days_windows, self.equal_appID,
                                     param['appID']))
-        # '''correlate features'''
-        # result.extend(self.generate(self.creative_correlate, 'creative_correlate',
-        #                             userID, creativeID, param['clickTime'], param['mode']))
 
         result.extend(self.generate(self.last_appID_operator, 'user_appID_last_op',
                                     userID, appID, clickTime))
         result.extend(self.generate(self.app_op_set, 'user_appID_op_set',
                                     userID, appID, clickTime))
+        result.extend(self.generate(self.user_convert_time_len, 'user_convert_time_len', userID, clickDay))
+        result.extend(self.generate(self.user_op_type_ratio, 'user_op_type_ratio',
+                                    userID, clickDay, appID, appPlatform, appCategory))
         Dataset_Role.flag = True
         return result

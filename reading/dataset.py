@@ -1,6 +1,7 @@
 from reading.position import Position
 from reading.advertisement import Advertisement
 from reading.app import App
+from reading.user import User
 
 
 class Dataset:
@@ -46,10 +47,12 @@ class Dataset:
     def add_to_position(self, position: Position):
         for record in self.data_list:
             position.add_dataset(record)
+        position.fresh()
 
     def add_to_advertisement(self, ad: Advertisement):
         for record in self.data_list:
             ad.add_dataset(record)
+        ad.fresh()
 
     def add_to_app_cat(self, ad: Advertisement, app: App):
         for record in self.data_list:
@@ -57,6 +60,11 @@ class Dataset:
             appID = ad.get_value(creativeID)['appID']
             appCategory = app.get_value(appID)['appCategory']
             app.add_dataset(record, appCategory)
+
+    def add_to_user(self, user: User):
+        for record in self.data_list:
+            user.add_dataset(record)
+        user.fresh()
 
     def get_data_list(self):
         return self.data_list

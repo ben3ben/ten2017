@@ -1,8 +1,11 @@
+import numpy as np
+
 class Position:
     def __init__(self, path, debug=False):
         self.debug = debug
         self.data = dict()
         self.dataset_pos = dict()
+        self.position_count = dict()
         self.read(path)
 
     def read(self, path):
@@ -29,9 +32,28 @@ class Position:
 
     def add_dataset(self, record):
         positionID = record['positionID']
+        _day = record['clickTime'] // 10000
+        label = record['label']
+        label = max(0, label)
         if positionID not in self.dataset_pos:
             self.dataset_pos[positionID] = list()
+            self.position_count[positionID] = np.zeros([2, 32])
         self.dataset_pos[positionID].append(record)
+        self.position_count[positionID][label][_day] += 1
+
+    def fresh(self):
+        def push(f):
+            for i in range(len(f)):
+                for j in range(1, len(f[i])):
+                    f[i][j] += f[i][j-1]
+
+        for k in self.position_count:
+            push(self.position_count[k])
 
     def get_dataset(self, positionID):
         return self.dataset_pos[positionID]
+
+    def get_position_count(self, positionID, label, from_t, end_t):
+        if label == -1:
+            return np.sum(self.position_count[positionID][:, end_t - 1] - self.position_count[positionID][:, from_t - 1])
+        return self.position_count[positionID][label, end_t - 1] - self.position_count[positionID][label, from_t - 1]

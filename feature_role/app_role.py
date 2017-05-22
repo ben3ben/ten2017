@@ -1,3 +1,4 @@
+import numpy as np
 from reading.app import App
 from conf.configure import Configure
 
@@ -12,6 +13,13 @@ class App_Role:
 
     def get_fea_names(self):
         return App_Role.fea_names
+
+    def category_to_vec(self, appCategory):
+        bai = appCategory // 100
+        result = [0] * 6
+        result[bai] = 1
+        result.append(1 if 0 < appCategory < 100 else 0)
+        return result
 
     def click_count_operator(self, appCategory, _time, tw):
         dlist = self.app.get_dataset(appCategory)
@@ -57,6 +65,25 @@ class App_Role:
         result = [a / (b + a + 1) for a, b in zip(convert, click)]
         return result
 
+    def split_in_hours(self, appCategory, clickDay, tw):
+        count = np.zeros([2, 24])
+        for d in self.app.get_dataset(appCategory):
+            clickTime = d['clickTime']
+            if clickTime < clickDay - tw or clickTime >= clickDay:
+                continue
+            hour = clickTime // 100 % 100
+            label = d['label']
+            count[label][hour] += 1
+        _sum = np.sum(count, axis=1)
+        count /= _sum.reshape([2, 1])
+        result = list()
+        for i in range(0, 24, 8):
+            result.append(np.sum(count[0][i:i+8]))
+            result.append(np.sum(count[1][i:i+8]))
+        # for i in range(8, 24, 3):
+        #     result.append(np.sum(count[0][i:i+3]) - np.sum(count[0][i+3:i+6]))
+        return result
+
     def get_key(self, *args):
         return ';'.join([str(v) for v in args])
 
@@ -75,13 +102,19 @@ class App_Role:
     def run(self, param):
         result = list()
         appID = param['appID']
+        clickDay = param['clickDay']
         app = self.app.get_value(appID)
         appCategory = app['appCategory']
+        # result.extend(self.generate(self.category_to_vec, 'app_cate_to_vec', True,
+        #                             appCategory))
         result.extend(self.generate(self.click_count_operator, 'app_cate_dataset_click_count', True,
                                     appCategory, param['clickDay'], Configure.days_windows))
         result.extend(self.generate(self.convert_count_operator, 'app_cate_dataset_convert_count', True,
                                     appCategory, param['clickDay'], Configure.days_windows))
         result.extend(self.generate(self.convert_ratio, 'app_cate_dataset_convert_ratio', True,
-                                    appCategory, param['clickDay'], Configure.days_windows[2:]))
+                                    appCategory, param['clickDay'], Configure.days_windows))
+        for _tw in [30000]:
+            result.extend(self.generate(self.split_in_hours, 'app_cate_split_in_hours_{}'.format(_tw), True,
+                                        appCategory, clickDay, _tw))
         App_Role.flag = True
         return result

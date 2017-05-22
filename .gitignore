@@ -5,4 +5,5 @@
 *.zip
 *.model
 *.txt
+*.xlsx
 __pycache__

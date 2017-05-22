@@ -3,27 +3,22 @@ from reading.dataset import Dataset
 from reading.advertisement import Advertisement
 from reading.app import App
 from reading.user import User
-from feature_role.user_role import User_Role
-from feature_role.dataset_role import Dataset_Role
-from feature_role.position_role import Position_Role
-from feature_role.advertisement_role import Advertisement_Role
-from feature_role.app_role import App_Role
-from feature_role.app_actions_role import App_Actions_Role
-from feature_role.combine_corr import Combine_Corr
-from feature_role.lda_role import Lda_Role
+from feature_role_diff.ad_diff_role import Advertisement_Diff_Role
+from feature_role_diff.position_diff_role import Position_Diff_Role
+from feature_role_diff.data_set_diff_role import Dataset_Diff_Role
 import random
 
 
-class DMatrix:
+class DMatrix_Diff:
     def __init__(self, user, train, position, ad, app, app_actions):
         self.user = user
         self.train = train  # type: Dataset
         self.ad = ad  # type: Advertisement
         self.app = app # type: App
         self.user = user # type: User
-        self.roles = [User_Role(user), Dataset_Role(train, ad, app), Position_Role(train, position),
-                      Advertisement_Role(train, ad), App_Role(app), App_Actions_Role(app_actions, train, ad, app),
-                      Combine_Corr(train, user, ad, app)]
+        self.roles = [Advertisement_Diff_Role(ad),
+                      Position_Diff_Role(position),
+                      Dataset_Diff_Role(train)]
 
     def run(self, begin_t, end_t, ratio=1.0):
         train_list = self.train.get_data_list()

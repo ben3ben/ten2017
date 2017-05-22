@@ -1,3 +1,12 @@
+def delta_time(ta, tb):
+    if ta < tb:
+        print('may be error in func delta_time')
+        exit()
+    _min = ta % 100 - tb % 100
+    _hour = ta // 100 % 100 - tb // 100 % 100
+    _day = ta // 10000 - tb // 10000
+    return  _day * 24 * 60 + _hour * 60 + _min
+
 def submit_file(instanceIDs, prediction, path):
     instanceIDs, prediction = (list(t) for t in zip(*sorted(zip(instanceIDs, prediction))))
     fout = open(path, 'w')
@@ -6,6 +15,13 @@ def submit_file(instanceIDs, prediction, path):
         fout.write('{0:},{1:0.6f}\n'.format(id, pred))
     fout.close()
 
+def prediction_to_file(instanceIDs, labels, prediction, path):
+    instanceIDs, labels, prediction = (list(t) for t in zip(*sorted(zip(instanceIDs, labels, prediction))))
+    fout = open(path, 'w')
+    fout.write('instanceID,label,prob\n')
+    for id, label, pred in zip(instanceIDs, labels, prediction):
+        fout.write('{0:},{1:0.1f},{2:0.6f}\n'.format(id, label, pred))
+    fout.close()
 
 def handle_correlate_to_vec(correlate, dlist, cond_name, cond, clickDay):
     _k2 = -1
@@ -52,4 +68,17 @@ def handle_correlate_to_vec(correlate, dlist, cond_name, cond, clickDay):
             weight_pro += a * b
     result = [_k2, _pro, _k2 * _pro, max_pro, avg_pro, weight_pro]
     result.extend(prod_limit)
+    return result
+
+
+def select_columns(data, erase):
+    result = data
+    fea_names = list()
+    columns_index = list()
+    for index, fea in enumerate(data['feature_names']):
+        if fea not in erase:
+            fea_names.append(fea)
+            columns_index.append(index)
+    result['features'] = data['features'][:, columns_index]
+    result['feature_names'] = fea_names
     return result
