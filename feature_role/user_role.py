@@ -111,11 +111,11 @@ class User_Role:
         hometown = param['hometown']
         residence = param['residence']
         _day = param['clickDay'] // 10000
-        result.extend(self.generate(self.age_to_vec, 'user_age', True, u['age']))
-        result.extend(self.generate(self.gender_to_vec, 'user_gender', True, u['gender']))
-        result.extend(self.generate(self.edu_to_vec, 'user_edu', True, u['education']))
-        result.extend(self.generate(self.marriage_to_vec, 'user_marriage', True, u['marriageStatus']))
-        result.extend(self.generate(self.baby_to_vec, 'user_havebaby', True, u['haveBaby']))
+        result.extend(self.generate(self.age_to_vec, 'user_age', True, u.age))
+        result.extend(self.generate(self.gender_to_vec, 'user_gender', True, u.gender))
+        result.extend(self.generate(self.edu_to_vec, 'user_edu', True, u.education))
+        result.extend(self.generate(self.marriage_to_vec, 'user_marriage', True, u.marriageStatus))
+        result.extend(self.generate(self.baby_to_vec, 'user_havebaby', True, u.haveBabys))
         result.extend(self.generate(self.hometown_equal_residence, 'hometown_equal_residence', True, hometown, residence))
 
         for tw in Configure.days_windows:

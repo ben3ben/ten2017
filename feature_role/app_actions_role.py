@@ -22,13 +22,13 @@ class App_Actions_Role:
     def install_count(self, userID, _time, tw):
         dlist = self.app_actions.get_value(userID)
         r = len(dlist)
-        while r > 0 and dlist[r - 1]['installTime'] >= _time:
+        while r > 0 and dlist[r - 1].installTime >= _time:
             r -= 1
         result = [0] * len(tw)
         index = 0
         if r > 0:
             for d in dlist[r - 1::-1]:
-                diff = _time - d['installTime']
+                diff = _time - d.installTime
                 while index < len(tw) and diff > tw[index]:
                     index += 1
                 if index == len(tw):
@@ -46,58 +46,58 @@ class App_Actions_Role:
         max_install_oneday = 0
         near_times = 31
         for index, d in enumerate(dlist):
-            if d['installTime'] >= _time:
+            if d.installTime >= _time:
                 break
             install_total += 1
-            if index == 0 or d['installTime'] // 10000 > dlist[index-1]['installTime'] // 10000:
+            if index == 0 or d.installTime // 10000 > dlist[index-1].installTime // 10000:
                 days += 1
                 _install = 0
-                near_times = _time - d['installTime']
+                near_times = _time - d.installTime
             _install += 1
             if _install > max_install_oneday:
                 max_install_oneday = _install
         avg_install = install_total / days if days > 0 else 0
-        last_times = _time - dlist[0]['installTime'] if len(dlist) > 0 and dlist[0]['installTime'] < _time else 30
+        last_times = _time - dlist[0].installTime if len(dlist) > 0 and dlist[0].installTime < _time else 30
         return [days, install_total, avg_install, max_install_oneday, last_times, near_times]
 
     def appid_install_early(self, userID, appID, clickDay):
         _install_count = 0
         _install_time = 31
         for d in self.app_actions.get_value(userID):
-            if d['installTime'] >= clickDay:
+            if d.installTime >= clickDay:
                 break
-            if d['appID'] == appID:
+            if d.appID == appID:
                 _install_count += 1
-                _install_time = clickDay - d['installTime']
+                _install_time = clickDay - d.installTime
         for d in self.data_set.get_value_by_user_id(userID):
-            if d['clickTime'] >= clickDay:
+            if d.clickTime >= clickDay:
                 break
-            creativeID = d['creativeID']
-            _appID = self.ad.get_value(creativeID)['appID']
+            creativeID = d.creativeID
+            _appID = self.ad.get_value(creativeID).appID
             if _appID == appID:
                 _install_count += 1
-                _install_time = min(_install_time, clickDay - d['clickTime'])
+                _install_time = min(_install_time, clickDay - d.clickTime)
         return [_install_count, _install_time]
 
     def cate_install_early(self, userID, cate, clickDay):
         _install_count = 0
         _install_time = 31
         for d in self.app_actions.get_value(userID):
-            if d['installTime'] >= clickDay:
+            if d.installTime >= clickDay:
                 break
-            _cate = self.app.get_value(d['appID'])['appCategory']
+            _cate = self.app.get_value(d.appID).appCategory
             if _cate == cate:
                 _install_count += 1
-                _install_time = clickDay - d['installTime']
+                _install_time = clickDay - d.installTime
         for d in self.data_set.get_value_by_user_id(userID):
-            if d['clickTime'] >= clickDay:
+            if d.clickTime >= clickDay:
                 break
-            creativeID = d['creativeID']
-            _appID = self.ad.get_value(creativeID)['appID']
-            _cate = self.app.get_value(_appID)['appCategory']
+            creativeID = d.creativeID
+            _appID = self.ad.get_value(creativeID).appID
+            _cate = self.app.get_value(_appID).appCategory
             if _cate == cate:
                 _install_count += 1
-                _install_time = min(_install_time, clickDay - d['clickTime'])
+                _install_time = min(_install_time, clickDay - d.clickTime)
         return [_install_count, _install_time]
 
     def get_key(self, *args):

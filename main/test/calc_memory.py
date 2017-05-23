@@ -6,6 +6,8 @@ try:
     from reprlib import repr
 except ImportError:
     pass
+import numpy as np
+
 
 def total_size(o, handlers={}, verbose=False):
     """ Returns the approximate memory footprint an object and all of its contents.
@@ -53,5 +55,6 @@ def total_size(o, handlers={}, verbose=False):
 class cc:
     a =1
 if __name__ == '__main__':
-    a = [{'1':1} for i in range(100000)]
+    # a = [{'1':1} for i in range(100000)]
+    a = np.zeros([1000000, 32])
     print(total_size(a, verbose=False))

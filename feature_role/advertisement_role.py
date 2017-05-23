@@ -20,11 +20,11 @@ class Advertisement_Role:
         result = dict()
         for key in self.ad.get_keys():
             record = self.ad.get_value(key)
-            creativeID = record['creativeID']
-            adID = record['adID']
-            camgaignID = record['camgaignID']
-            advertiserID = record['advertiserID']
-            appID = record['appID']
+            creativeID = record.creativeID
+            adID = record.adID
+            camgaignID = record.camgaignID
+            advertiserID = record.advertiserID
+            appID = record.appID
             if appID not in result:
                 result[appID] = dict()
                 result[appID]['creative'] = set()
@@ -98,31 +98,22 @@ class Advertisement_Role:
         _sum = self.ad.get_app_count(appID, -1, _time - tw, _time)
         return [convert / (_sum + 1)]
 
-    def to_dlist_of_correlate(self, dlist, cond_name):
-        result = list()
-        for d in dlist:
-            _r = {'label': d['label'],
-                  'clickTime': d['clickTime'],
-                  cond_name: self.ad.get_value(d['creativeID'])[cond_name]}
-            result.append(_r)
-        return result
-
     def app_convert_time_len(self, appID, clickDay):
         s = list()
         for d in self.ad.get_dataset_app(appID):
-            if d['clickTime'] >= clickDay:
+            if d.clickTime >= clickDay:
                 break
-            if d['label'] == 1:
-                s.append(delta_time(d['conversionTime'], d['clickTime']))
+            if d.label == 1:
+                s.append(delta_time(d.conversionTime, d.clickTime))
         return [np.average(s)] if len(s) > 0 else [-1]
 
     def creative_convert_time_len(self, creativeID, clickDay):
         s = list()
         for d in self.ad.get_dataset_create(creativeID):
-            if d['clickTime'] >= clickDay:
+            if d.clickTime >= clickDay:
                 break
-            if d['label'] == 1:
-                s.append(delta_time(d['conversionTime'], d['clickTime']))
+            if d.label == 1:
+                s.append(delta_time(d.conversionTime, d.clickTime))
         return [np.average(s)] if len(s) > 0 else [-1]
 
     def app_set_to_vec(self, appID):
@@ -187,12 +178,11 @@ class Advertisement_Role:
     def run(self, param):
         result = list()
         creativeID = param['creativeID']
-        create = self.ad.get_value(creativeID)
-        adID = create['adID']
-        camgaignID = create['camgaignID']
-        advertiserID = create['advertiserID']
-        appID = create['appID']
-        appPlatform = create['appPlatform']
+        adID = param['adID']
+        camgaignID = param['camgaignID']
+        advertiserID = param['advertiserID']
+        appID = param['appID']
+        appPlatform = param['appPlatform']
         clickDay = param['clickDay']
         _day = clickDay // 10000
         result.extend(self.generate(self.appPlatform_to_vec, 'ad_appPlatform', False, appPlatform))

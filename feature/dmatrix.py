@@ -23,7 +23,7 @@ class DMatrix:
         self.user = user # type: User
         self.roles = [User_Role(user), Dataset_Role(train, ad, app), Position_Role(train, position),
                       Advertisement_Role(train, ad), App_Role(app), App_Actions_Role(app_actions, train, ad, app),
-                      Combine_Corr(train, user, ad, app)]
+                      Combine_Corr(train, user, ad, app, position, app_actions)]
 
     def run(self, begin_t, end_t, ratio=1.0):
         train_list = self.train.get_data_list()
@@ -31,36 +31,35 @@ class DMatrix:
         labels = list()
         features = list()
         for index, record in enumerate(train_list):
-            if record['clickTime'] < begin_t or record['clickTime'] >= end_t:
+            if record.clickTime < begin_t or record.clickTime >= end_t:
                 continue
             if random.random() > ratio:
                 continue
-            _ad = self.ad.get_value(record['creativeID'])
-            _app = self.app.get_value(_ad['appID'])
-            _user = self.user.get_value(record['userID'])
-            param = {'userID': record['userID'],
-                     'hometown': _user['hometown'],
-                     'residence': _user['residence'],
-                     'positionID': record['positionID'],
-                     'creativeID': record['creativeID'],
-                     'adID': _ad['adID'],
-                     'camgaignID': _ad['camgaignID'],
-                     'advertiserID': _ad['advertiserID'],
-                     'appPlatform': _ad['appPlatform'],
-                     'appID': _ad['appID'],
-                     'appCategory': _app['appCategory'],
-                     'clickTime': record['clickTime'],
-                     'connectionType': record['connectionType'],
-                     'telecomsOperator': record['telecomsOperator'],
-                     'haveBaby': _user['haveBaby'],
-                     'clickDay': record['clickTime'] // 10000 * 10000,
-                     'userid_dlist': self.train.get_value_by_user_id(record['userID'])}
+            _ad = self.ad.get_value(record.creativeID)
+            _app = self.app.get_value(_ad.appID)
+            _user = self.user.get_value(record.userID)
+            param = {'userID': record.userID,
+                     'gender': _user.gender,
+                     'education': _user.education,
+                     'hometown': _user.hometown,
+                     'residence': _user.residence,
+                     'positionID': record.positionID,
+                     'creativeID': record.creativeID,
+                     'adID': _ad.adID,
+                     'camgaignID': _ad.camgaignID,
+                     'advertiserID': _ad.advertiserID,
+                     'appPlatform': _ad.appPlatform,
+                     'appID': _ad.appID,
+                     'appCategory': _app.appCategory,
+                     'clickTime': record.clickTime,
+                     'connectionType': record.connectionType,
+                     'telecomsOperator': record.telecomsOperator,
+                     'haveBaby': _user.haveBabys,
+                     'clickDay': record.clickTime // 10000 * 10000,
+                     'userid_dlist': self.train.get_value_by_user_id(record.userID)}
             feas = [role.run(param) for role in self.roles]
-            labels.append(record['label'])
-            if 'instanceID' in record:
-                instanceIDs.append(record['instanceID'])
-            else:
-                instanceIDs.append(index)
+            labels.append(record.label)
+            instanceIDs.append(record.instanceID)
             features.append(np.concatenate(feas))
         result = {'instanceIDs': np.array(instanceIDs),
                   'labels': np.array(labels),

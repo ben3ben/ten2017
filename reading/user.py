@@ -1,9 +1,13 @@
 import numpy as np
+from reading.user_item import User_Item
+from reading.dataset_item import Dataset_Item
+from typing import Dict
+
 
 class User:
     def __init__(self, path, debug=False):
         self.debug = debug
-        self.data = dict()
+        self.data = dict()  # type: Dict[Int, User_Item]
         self.dataset_by_hometown = dict()
         self.dataset_by_residence = dict()
 
@@ -20,14 +24,7 @@ class User:
                 break
             tmp = [int(v) for v in line.split(',')]
             userID, age, gender, education, marriageStatus, haveBaby, hometown, residence = tmp
-            self.data[userID] = {'creativeID': userID,
-                                 'age': age,
-                                 'gender': gender,
-                                 'education': education,
-                                 'marriageStatus': marriageStatus,
-                                 'haveBaby': haveBaby,
-                                 'hometown': hometown,
-                                 'residence': residence }
+            self.data[userID] = User_Item(userID, age, gender, education, marriageStatus, haveBaby, hometown, residence)
         fin.close()
 
     def get_keys(self):
@@ -39,12 +36,12 @@ class User:
     def exists(self, key):
         return key in self.data
 
-    def add_dataset(self, record):
-        userID = record['userID']
-        hometown = self.data[userID]['hometown'] // 100
-        residence = self.data[userID]['residence'] // 100
-        _day = record['clickTime'] // 10000
-        label = record['label']
+    def add_dataset(self, record : Dataset_Item):
+        userID = record.userID
+        hometown = self.data[userID].hometown // 100
+        residence = self.data[userID].residence // 100
+        _day = record.clickTime // 10000
+        label = record.label
         label = max(0, label)
         if hometown not in self.dataset_by_hometown:
             self.dataset_by_hometown[hometown] = list()

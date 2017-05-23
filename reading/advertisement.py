@@ -1,14 +1,17 @@
+from reading.ad_item import Ad_Item
+from reading.dataset_item import Dataset_Item
 import numpy as np
+from typing import Dict, List
 
 class Advertisement:
     def __init__(self, path, debug=False):
         self.debug = debug
-        self.data = dict()
-        self.dataset_create = dict()
-        self.dataset_ad = dict()
-        self.dataset_camgaign = dict()
-        self.dataset_advertiser = dict()
-        self.dataset_app = dict()
+        self.data = dict()  # type: Dict[Int, Ad_Item]
+        self.dataset_create = dict()    # type: Dict[Int, List[Dataset_Item]]
+        self.dataset_ad = dict()    # type: Dict[Int, List[Dataset_Item]]
+        self.dataset_camgaign = dict()    # type: Dict[Int, List[Dataset_Item]]
+        self.dataset_advertiser = dict()    # type: Dict[Int, List[Dataset_Item]]
+        self.dataset_app = dict()    # type: Dict[Int, List[Dataset_Item]]
 
         self.creat_count = dict()
         self.ad_count = dict()
@@ -25,12 +28,7 @@ class Advertisement:
                 break
             tmp = [int(v) for v in line.split(',')]
             creativeID, adID, camgaignID, advertiserID, appID, appPlatform = tmp
-            self.data[creativeID] = {'creativeID': creativeID,
-                                     'adID': adID,
-                                     'camgaignID': camgaignID,
-                                     'advertiserID': advertiserID,
-                                     'appID': appID,
-                                     'appPlatform': appPlatform }
+            self.data[creativeID] = Ad_Item(creativeID, adID, camgaignID, advertiserID, appID, appPlatform)
         fin.close()
 
     def get_keys(self):
@@ -42,14 +40,14 @@ class Advertisement:
     def exists(self, key):
         return key in self.data
 
-    def add_dataset(self, record):
-        creativeID = record['creativeID']
-        adID = self.data[creativeID]['adID']
-        camgaignID = self.data[creativeID]['camgaignID']
-        advertiserID = self.data[creativeID]['advertiserID']
-        appID = self.data[creativeID]['appID']
-        _day = record['clickTime'] // 10000
-        label = record['label']
+    def add_dataset(self, record : Dataset_Item):
+        creativeID = record.creativeID
+        adID = self.data[creativeID].adID
+        camgaignID = self.data[creativeID].camgaignID
+        advertiserID = self.data[creativeID].advertiserID
+        appID = self.data[creativeID].appID
+        _day = record.clickTime // 10000
+        label = record.label
         label = max(0, label)
         if creativeID not in self.dataset_create:
             self.dataset_create[creativeID] = list()

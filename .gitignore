@@ -6,4 +6,7 @@
 *.model
 *.txt
 *.xlsx
+*.train
+*.test
+*.submit
 __pycache__

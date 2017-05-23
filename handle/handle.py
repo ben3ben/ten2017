@@ -15,6 +15,34 @@ def submit_file(instanceIDs, prediction, path):
         fout.write('{0:},{1:0.6f}\n'.format(id, pred))
     fout.close()
 
+def output_instanceID(ids, path):
+    fout = open(path, 'w')
+    for v in ids:
+        print(v, file=fout)
+    fout.close()
+
+def output_feature_names(fea_names, path):
+    fout = open(path, 'w')
+    for v in fea_names:
+        print(v, file=fout)
+    fout.close()
+
+def read_feature_names(path):
+    fin = open(path)
+    result = list()
+    for line in fin:
+        result.append(line.strip())
+    fin.close()
+    return result
+
+def read_instanceID(path):
+    fin = open(path)
+    result = list()
+    for line in fin:
+        result.append(int(line))
+    fin.close()
+    return result
+
 def prediction_to_file(instanceIDs, labels, prediction, path):
     instanceIDs, labels, prediction = (list(t) for t in zip(*sorted(zip(instanceIDs, labels, prediction))))
     fout = open(path, 'w')

@@ -66,8 +66,8 @@ class Position_Role:
         positionID = param['positionID']
         _day = param['clickDay'] // 10000
         pos = self.position.get_value(positionID)
-        result.extend(self.generate(self.sitesetID_to_vec, 'position_sitesetID', False, pos['sitesetID']))
-        result.extend(self.generate(self.positionType_to_vec, 'position_positionType', False, pos['positionType']))
+        result.extend(self.generate(self.sitesetID_to_vec, 'position_sitesetID', False, pos.sitesetID))
+        result.extend(self.generate(self.positionType_to_vec, 'position_positionType', False, pos.positionType))
         for tw in Configure.days_windows:
             _tw = tw // 10000
             result.extend(self.generate(self.click_count_operator, 'position_click_count_{}'.format(_tw), True,

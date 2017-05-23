@@ -54,7 +54,14 @@ class Configure:
                      'test': '../../file/feature/test_feature.csv',
                      'test_describe': '../../file/feature/test_feature_describe.csv',
                      'submit': '../../file/feature/submit_feature.csv',
-                     'submit_describe': '../../file/feature/submit_feature_describe.csv', }
+                     'submit_describe': '../../file/feature/submit_feature_describe.csv'}
+    xgb_feature = {'xgb_train': '../../file/dmatrix/xbg.train',
+                   'train_instanceID': '../../file/dmatrix/train_instanceID.csv',
+                   'xgb_test': '../../file/dmatrix/xbg.test',
+                   'test_instanceID': '../../file/dmatrix/test_instanceID.csv',
+                   'xgb_submit': '../../file/dmatrix/xbg.submit',
+                   'submit_instanceID': '../../file/dmatrix/submit_instanceID.csv',
+                   'feature_names':  '../../file/dmatrix/feature_names.csv'}
 
     '''lda'''
     user_appid_topic_for_user = '../../data/lda/user_appid_topic_for_user.csv'
@@ -103,3 +110,15 @@ class Configure:
                            'user_havebaby_6'])
     features_erase.extend(['user_create_click_count_1', 'ad_ad_convert_count_70000_0', 'user_ad_click_count_2',
                            'ad_advertiser_click_count_70000_0'])
+
+    features_erase.extend(['user_dataset_click_one_day_17', 'user_residence_convert_ratio_50000_0', 'user_marriage_0',
+                           'user_edu_4', 'user_dataset_click_in_days_0', 'user_residence_click_count_70000_0',
+                           'app_baby_corr_150000_1', 'app_cate_dataset_click_count_1', 'user_havebaby_1',
+                           'user_marriage_2', 'user_edu_0', 'user_age_4', 'user_age_2', 'app_cate_dataset_convert_count_2',
+                           'user_marriage_3', 'dataset_clicktime_6', 'user_age_1', 'user_appID_convert_ratio_0',
+                           'user_convert_ratio_70000_0', 'user_appID_convert_count_2', 'user_dataset_click_one_day_18',
+                           'user_op_type_ratio_1', 'user_havebaby_2', 'dataset_clicktime_2', 'user_age_6',
+                           'user_edu_5', 'user_convert_count_50000_0', 'user_age_7', 'user_havebaby_5',
+                           'user_dataset_click_one_day_14', 'user_convert_ratio_50000_0', 'user_appPlatform_convert_count_0',
+                           'user_havebaby_4', 'user_appID_op_set_1', 'user_appPlatform_convert_count_2',
+                           'user_appID_convert_ratio_1', 'user_appID_convert_count_1'])

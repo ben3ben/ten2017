@@ -5,6 +5,8 @@ from conf.configure import Configure
 from handle.handle import handle_correlate_to_vec
 import numpy as np
 from handle.handle import delta_time
+from reading.dataset_item import Dataset_Item
+from typing import List
 
 
 class Dataset_Role:
@@ -47,33 +49,33 @@ class Dataset_Role:
         result[telecomsOperator] = 1
         return result
 
-    def eauql_creativeID(self, _dlist, val):
-        return _dlist['creativeID'] == val
+    def eauql_creativeID(self, _dlist : Dataset_Item, val):
+        return _dlist.creativeID == val
 
-    def equal_adID(self, _dlist, val):
-        return self.ad.get_value(_dlist['creativeID'])['adID'] == val
+    def equal_adID(self, _dlist : Dataset_Item, val):
+        return self.ad.get_value(_dlist.creativeID).adID == val
 
-    def equal_camgaignID(self, _dlist, val):
-        return self.ad.get_value(_dlist['creativeID'])['camgaignID'] == val
+    def equal_camgaignID(self, _dlist : Dataset_Item, val):
+        return self.ad.get_value(_dlist.creativeID).camgaignID == val
 
-    def equal_advertiserID(self, _dlist, val):
-        return self.ad.get_value(_dlist['creativeID'])['advertiserID'] == val
+    def equal_advertiserID(self, _dlist : Dataset_Item, val):
+        return self.ad.get_value(_dlist.creativeID).advertiserID == val
 
-    def equal_appPlatform(self, _dlist, val):
-        return self.ad.get_value(_dlist['creativeID'])['appPlatform'] == val
+    def equal_appPlatform(self, _dlist : Dataset_Item, val):
+        return self.ad.get_value(_dlist.creativeID).appPlatform == val
 
-    def equal_appID(self, _dlist, val):
-        return self.ad.get_value(_dlist['creativeID'])['appID'] == val
+    def equal_appID(self, _dlist : Dataset_Item, val):
+        return self.ad.get_value(_dlist.creativeID).appID == val
 
-    def click_count_operator(self, dlist, _time, tw, condition_func=None, condition=None):
+    def click_count_operator(self, dlist : List[Dataset_Item], _time, tw, condition_func=None, condition=None):
         r = len(dlist)
-        while r > 0 and dlist[r - 1]['clickTime'] >= _time:
+        while r > 0 and dlist[r - 1].clickTime >= _time:
             r -= 1
         result = [0] * len(tw)
         index = 0
         if r > 0:
             for d in dlist[r - 1::-1]:
-                diff = _time - d['clickTime']
+                diff = _time - d.clickTime
                 while index < len(tw) and diff > tw[index]:
                     index += 1
                 if index == len(tw):
@@ -84,58 +86,61 @@ class Dataset_Role:
             result[i] += result[i - 1]
         return result
 
-    def convert_count_operator(self, dlist, _time, tw, condition_func=None, condition=None):
+    def convert_count_operator(self, dlist : List[Dataset_Item], _time, tw, condition_func=None, condition=None):
         r = len(dlist)
-        while r > 0 and dlist[r - 1]['clickTime'] >= _time:
+        while r > 0 and dlist[r - 1].clickTime >= _time:
             r -= 1
         result = [0] * len(tw)
         index = 0
         if r > 0:
             for d in dlist[r - 1::-1]:
-                diff = _time - d['clickTime']
+                diff = _time - d.clickTime
                 while index < len(tw) and diff > tw[index]:
                     index += 1
                 if index == len(tw):
                     break
                 if condition_func is None or condition_func(d, condition):
-                    result[index] += d['label']
+                    result[index] += d.label
         for i in range(1, len(tw)):
             result[i] += result[i - 1]
         return result
 
-    def convert_ratio(self, dlist, _time, tw, condition_func=None, condition=None):
+    def convert_ratio(self, dlist : List[Dataset_Item], _time, tw, condition_func=None, condition=None):
         convert = self.convert_count_operator(dlist, _time, tw, condition_func, condition)
         click = self.click_count_operator(dlist, _time, tw, condition_func, condition)
         result = [a / (b + a + 1) for a, b in zip(convert, click)]
         return result
 
-    def click_one_day(self, dlist, param):
+    def click_one_day(self, dlist : List[Dataset_Item], param):
         count = 0
         last = -1
         clickDay = param['clickDay']
-        _dataset_keys = ['creativeID',
-                        'positionID',
-                        'connectionType',
-                        'telecomsOperator']
-        _ad_keys = ['adID',
-                    'camgaignID',
-                    'advertiserID',
-                    'appPlatform',
-                    'appID']
-        r_dk = [0] * len(_dataset_keys)
-        r_ak = [0] * len(_ad_keys)
+        r_dk = [0] * 4
+        r_ak = [0] * 5
         for i in range(len(dlist) - 1, -1, -1):
-            day = dlist[i]['clickTime'] // 10000 * 10000
+            day = dlist[i].clickTime // 10000 * 10000
             if day == clickDay:
                 count += 1
-                for index, key in enumerate(_dataset_keys):
-                    if param[key] == dlist[i][key]:
-                        r_dk[index] += 1
-                for index, key in enumerate(_ad_keys):
-                    if param[key] == self.ad.get_value(dlist[i]['creativeID'])[key]:
-                        r_ak[index] += 1
+                if param['creativeID'] == dlist[i].creativeID:
+                    r_dk[0] += 1
+                if param['positionID'] == dlist[i].positionID:
+                    r_dk[1] += 1
+                if param['connectionType'] == dlist[i].connectionType:
+                    r_dk[2] += 1
+                if param['telecomsOperator'] == dlist[i].telecomsOperator:
+                    r_dk[3] += 1
+                if param['adID'] ==self.ad.get_value(dlist[i].creativeID).adID:
+                    r_ak[0] += 1
+                if param['camgaignID'] ==self.ad.get_value(dlist[i].creativeID).camgaignID:
+                    r_ak[1] += 1
+                if param['advertiserID'] ==self.ad.get_value(dlist[i].creativeID).advertiserID:
+                    r_ak[2] += 1
+                if param['appPlatform'] ==self.ad.get_value(dlist[i].creativeID).appPlatform:
+                    r_ak[3] += 1
+                if param['appID'] ==self.ad.get_value(dlist[i].creativeID).appID:
+                    r_ak[4] += 1
             if day < clickDay:
-                last = clickDay - dlist[i]['clickTime']
+                last = clickDay - dlist[i].clickTime
                 break
         result = [last, count]
         result.extend(r_dk)
@@ -144,20 +149,20 @@ class Dataset_Role:
         result.extend([v / count if v > 0 else 0 for v in r_ak])
         return result
 
-    def click_in_days(self, dlist, clickDay):
+    def click_in_days(self, dlist : List[Dataset_Item], clickDay):
         _click = 0
         _convert = 0
         _click_one_day = 0
         _day = 0
         for index, d in enumerate(dlist):
-            if d['clickTime'] > clickDay:
+            if d.clickTime > clickDay:
                 break
-            elif d['clickTime'] // 10000 * 10000 == clickDay:
+            elif d.clickTime // 10000 * 10000 == clickDay:
                 _click_one_day += 1
             else:
                 _click += 1
-                _convert += d['label']
-                if index == 0 or dlist[index]['clickTime'] // 10000 > dlist[index]['clickTime'] // 10000:
+                _convert += d.label
+                if index == 0 or dlist[index].clickTime // 10000 > dlist[index].clickTime // 10000:
                     _day += 1
         avg_click_day = _click / _day if _click > 0 else 0
         avg_convert_day = _convert / _day if _convert > 0 else 0
@@ -171,13 +176,13 @@ class Dataset_Role:
         after_total = 0
         after_near = -1e-5
         for d in dlist:
-            _creative = d['creativeID']
-            _clickTime = d['clickTime']
-            _app = self.ad.get_value(_creative)['appID']
+            _creative = d.creativeID
+            _clickTime = d.clickTime
+            _app = self.ad.get_value(_creative).appID
             if _clickTime // 10000 > clickTime // 10000:
                 break
             if _app == appID:
-                if _clickTime // 10000 < clickTime // 10000 and d['label'] == 1:
+                if _clickTime // 10000 < clickTime // 10000 and d.label == 1:
                     before_convert_total += 1
                 if _clickTime < clickTime:
                     before_total += 1
@@ -192,9 +197,9 @@ class Dataset_Role:
         app_set_oneday = set()
         app_set_before = set()
         for d in dlist:
-            _creative = d['creativeID']
-            _clickTime = d['clickTime']
-            _app = self.ad.get_value(_creative)['appID']
+            _creative = d.creativeID
+            _clickTime = d.clickTime
+            _app = self.ad.get_value(_creative).appID
             if _clickTime // 10000 > clickTime // 10000:
                 break
             if _clickTime // 10000 == clickTime // 10000:
@@ -205,23 +210,23 @@ class Dataset_Role:
     def user_convert_time_len(self, userID, clickDay):
         s = list()
         for d in self.data_set.get_value_by_user_id(userID):
-            if d['clickTime'] >= clickDay:
+            if d.clickTime >= clickDay:
                 break
-            if d['label'] == 1:
-                s.append(delta_time(d['conversionTime'], d['clickTime']))
+            if d.label == 1:
+                s.append(delta_time(d.conversionTime, d.clickTime))
         return [np.average(s)] if len(s) > 0 else [-1]
 
     def user_op_type_ratio(self, userID, clickDay, appID, appPlatform, appCategory):
         _sum = 0
         result = [0] * 3
         for d in self.data_set.get_value_by_user_id(userID):
-            if d['clickTime'] // 10000 > clickDay:
+            if d.clickTime // 10000 > clickDay:
                 break
             _sum += 1
-            _creativeID = d['creativeID']
-            _appID = self.ad.get_value(_creativeID)['appID']
-            _appPlatform = self.ad.get_value(_creativeID)['appPlatform']
-            _appCategory = self.app.get_value(_appID)['appCategory']
+            _creativeID = d.creativeID
+            _appID = self.ad.get_value(_creativeID).appID
+            _appPlatform = self.ad.get_value(_creativeID).appPlatform
+            _appCategory = self.app.get_value(_appID).appCategory
             result[0] += 1 if _appID == appID else 0
             result[1] += 1 if _appPlatform == appPlatform else 0
             result[2] += 1 if _appCategory == appCategory else 0

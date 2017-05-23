@@ -24,13 +24,13 @@ class App_Role:
     def click_count_operator(self, appCategory, _time, tw):
         dlist = self.app.get_dataset(appCategory)
         r = len(dlist)
-        while r > 0 and dlist[r - 1]['clickTime'] >= _time:
+        while r > 0 and dlist[r - 1].clickTime >= _time:
             r -= 1
         result = [0] * len(tw)
         index = 0
         if r > 0:
             for d in dlist[r - 1::-1]:
-                diff = _time - d['clickTime']
+                diff = _time - d.clickTime
                 while index < len(tw) and diff > tw[index]:
                     index += 1
                 if index == len(tw):
@@ -43,18 +43,18 @@ class App_Role:
     def convert_count_operator(self, appCategory, _time, tw):
         dlist = self.app.get_dataset(appCategory)
         r = len(dlist)
-        while r > 0 and dlist[r - 1]['clickTime'] >= _time:
+        while r > 0 and dlist[r - 1].clickTime >= _time:
             r -= 1
         result = [0] * len(tw)
         index = 0
         if r > 0:
             for d in dlist[r - 1::-1]:
-                diff = _time - d['clickTime']
+                diff = _time - d.clickTime
                 while index < len(tw) and diff > tw[index]:
                     index += 1
                 if index == len(tw):
                     break
-                result[index] += d['label']
+                result[index] += d.label
         for i in range(1, len(tw)):
             result[i] += result[i - 1]
         return result
@@ -68,11 +68,11 @@ class App_Role:
     def split_in_hours(self, appCategory, clickDay, tw):
         count = np.zeros([2, 24])
         for d in self.app.get_dataset(appCategory):
-            clickTime = d['clickTime']
+            clickTime = d.clickTime
             if clickTime < clickDay - tw or clickTime >= clickDay:
                 continue
             hour = clickTime // 100 % 100
-            label = d['label']
+            label = d.label
             count[label][hour] += 1
         _sum = np.sum(count, axis=1)
         count /= _sum.reshape([2, 1])
@@ -103,8 +103,7 @@ class App_Role:
         result = list()
         appID = param['appID']
         clickDay = param['clickDay']
-        app = self.app.get_value(appID)
-        appCategory = app['appCategory']
+        appCategory = param['appCategory']
         # result.extend(self.generate(self.category_to_vec, 'app_cate_to_vec', True,
         #                             appCategory))
         result.extend(self.generate(self.click_count_operator, 'app_cate_dataset_click_count', True,

@@ -1,4 +1,5 @@
-import xgboost as xgb
+import sys
+sys.path.append('../..')
 from conf.configure import Configure
 from reading.advertisement import Advertisement
 from reading.app import App
@@ -6,11 +7,11 @@ from reading.dataset import Dataset
 from reading.position import Position
 from reading.user import User
 from reading.user_app_actions import User_App_Actions
-from reading.user_app_installed import User_App_Installed
 from feature.dmatrix import DMatrix
 import pandas as pd
-import numpy as np
 from handle.handle import *
+import xgboost as xgb
+
 
 if __name__ == '__main__':
     debug = False
@@ -30,30 +31,42 @@ if __name__ == '__main__':
 
     print('generate train...')
     # train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t, 'train')
-    train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t, 'train', ratio=1)
+    train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t, ratio=1)
     train = select_columns(train, Configure.features_erase)
     p_train = pd.DataFrame(data=train['features'], columns=train['feature_names'])
     # p_train.to_csv(Configure.feature_files['train'], index=False)
     des_train = p_train.describe()
     des_train.T.to_csv(Configure.feature_files['train_describe'])
+    dtrain = xgb.DMatrix(train['features'], train['labels'], feature_names=train['feature_names'])
+    dtrain.save_binary(Configure.xgb_feature['xgb_train'])
+    output_instanceID(train['instanceIDs'], Configure.xgb_feature['train_instanceID'])
+    output_feature_names(train['feature_names'], Configure.xgb_feature['feature_names'])
     del train
     del p_train
+    del dtrain
     print('generate test...')
-    test = dmatrix.run(Configure.test_begin_t, Configure.test_end_t, 'train', ratio=1)
+    test = dmatrix.run(Configure.test_begin_t, Configure.test_end_t, ratio=1)
     test = select_columns(test, Configure.features_erase)
     p_test = pd.DataFrame(data=test['features'], columns=test['feature_names'])
     # p_test.to_csv(Configure.feature_files['test'], index=False)
     des_test = p_test.describe()
     des_test.T.to_csv(Configure.feature_files['test_describe'])
+    dtest = xgb.DMatrix(test['features'], test['labels'], feature_names=test['feature_names'])
+    dtest.save_binary(Configure.xgb_feature['xgb_test'])
+    output_instanceID(test['instanceIDs'], Configure.xgb_feature['test_instanceID'])
+
     del test
     del p_test
     print('generate submit...')
-    submit = dmatrix.run(Configure.submit_begin_t, Configure.submit_end_t, 'train', ratio=1)
+    submit = dmatrix.run(Configure.submit_begin_t, Configure.submit_end_t, ratio=1)
     submit = select_columns(submit, Configure.features_erase)
     p_submit = pd.DataFrame(data=submit['features'], columns=submit['feature_names'])
     # p_submit.to_csv(Configure.feature_files['submit'], index=False)
     des_submit = p_submit.describe()
     des_submit.T.to_csv(Configure.feature_files['submit_describe'])
+    dsubmit = xgb.DMatrix(submit['features'], submit['labels'], feature_names=submit['feature_names'])
+    dsubmit.save_binary(Configure.xgb_feature['xgb_submit'])
+    output_instanceID(submit['instanceIDs'], Configure.xgb_feature['submit_instanceID'])
 
     des_submit = des_submit.T
     des_test = des_test.T

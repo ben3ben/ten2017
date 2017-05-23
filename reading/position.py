@@ -1,9 +1,12 @@
 import numpy as np
+from reading.position_item import Position_Item
+from reading.dataset_item import Dataset_Item
+from typing import Dict
 
 class Position:
     def __init__(self, path, debug=False):
         self.debug = debug
-        self.data = dict()
+        self.data = dict()  # type: Dict[Int, Position_Item]
         self.dataset_pos = dict()
         self.position_count = dict()
         self.read(path)
@@ -16,9 +19,7 @@ class Position:
                 break
             tmp = [int(v) for v in line.split(',')]
             positionID, sitesetID, positionType = tmp
-            self.data[positionID] = {'positionID': positionID,
-                                     'sitesetID': sitesetID,
-                                     'positionType': positionType}
+            self.data[positionID] = Position_Item(positionID, sitesetID, positionType)
         fin.close()
 
     def get_keys(self):
@@ -30,10 +31,10 @@ class Position:
     def exists(self, key):
         return key in self.data
 
-    def add_dataset(self, record):
-        positionID = record['positionID']
-        _day = record['clickTime'] // 10000
-        label = record['label']
+    def add_dataset(self, record : Dataset_Item):
+        positionID = record.positionID
+        _day = record.clickTime // 10000
+        label = record.label
         label = max(0, label)
         if positionID not in self.dataset_pos:
             self.dataset_pos[positionID] = list()

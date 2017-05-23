@@ -1,7 +1,10 @@
+from reading.user_app_action_item import User_App_Action_Item
+from typing import Dict, List
+
 class User_App_Actions:
     def __init__(self, path, debug=False):
         self.debug = debug
-        self.data = dict()
+        self.data = dict()  # type: Dict[Int, List[User_App_Action_Item]]
         self.read(path)
 
     def read(self, path):
@@ -14,9 +17,7 @@ class User_App_Actions:
             userID, installTime, appID = tmp
             if userID not in self.data:
                 self.data[userID] = list()
-            d = {'userID': userID,
-                 'installTime': installTime,
-                 'appID': appID}
+            d = User_App_Action_Item(userID, installTime, appID)
             self.data[userID].append(d)
         fin.close()
 

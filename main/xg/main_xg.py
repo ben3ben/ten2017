@@ -33,6 +33,7 @@ if __name__ == '__main__':
 
     print('generate train...')
     train = dmatrix.run(Configure.train_begin_t, Configure.train_end_t, ratio=1.)
+    # train = dmatrix.run(270000, 290000, ratio=1.)
     # train = dmatrix.run(280000, 300000, 'train')
     train = select_columns(train, Configure.features_erase)
     print('generate test...')
@@ -56,6 +57,7 @@ if __name__ == '__main__':
              'subsample': 0.9,
              'colsample_bytree': 0.9,
              'gamma': 0.15,
+             # 'lambda': 10,
              'objective': 'reg:logistic',
              'silent': 1,
              'sample_type': 'uniform',
@@ -81,14 +83,14 @@ if __name__ == '__main__':
     prediction_to_file(train['instanceIDs'], train['labels'], pred_train, Configure.xgb_model_file['train'])
     pred_test = bst.predict(dtest)
     prediction_to_file(test['instanceIDs'], test['labels'], pred_test, Configure.xgb_model_file['test'])
-    del dtrain
-    del dtest
-    del train
-    del test
-    print('generate submit...')
-    submit = dmatrix.run(Configure.submit_begin_t, Configure.submit_end_t)
-    submit = select_columns(submit, Configure.features_erase)
-    dsubmit = xgb.DMatrix(submit['features'], feature_names=submit['feature_names'])
-    submission = bst.predict(dsubmit)
-    submit_file(submit['instanceIDs'], submission, Configure.submission)
-    prediction_to_file(submit['instanceIDs'], submit['labels'], submission, Configure.xgb_model_file['submit'])
+    # del dtrain
+    # del dtest
+    # del train
+    # del test
+    # print('generate submit...')
+    # submit = dmatrix.run(Configure.submit_begin_t, Configure.submit_end_t)
+    # submit = select_columns(submit, Configure.features_erase)
+    # dsubmit = xgb.DMatrix(submit['features'], feature_names=submit['feature_names'])
+    # submission = bst.predict(dsubmit)
+    # submit_file(submit['instanceIDs'], submission, Configure.submission)
+    # prediction_to_file(submit['instanceIDs'], submit['labels'], submission, Configure.xgb_model_file['submit'])

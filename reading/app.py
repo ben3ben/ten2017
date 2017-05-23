@@ -1,8 +1,12 @@
+from reading.app_item import App_Item
+from reading.dataset_item import Dataset_Item
+from typing import Dict, List
+
 class App:
     def __init__(self, path, debug=False):
         self.debug = debug
-        self.data = dict()
-        self.dataset_app_cat = dict()
+        self.data = dict()  # type: Dict[Int, App_Item]
+        self.dataset_app_cat = dict()   # type: Dict[Int, List[Dataset_Item]]
         self.read(path)
 
     def read(self, path):
@@ -13,8 +17,7 @@ class App:
                 break
             tmp = [int(v) for v in line.split(',')]
             appID, appCategory = tmp
-            self.data[appID] = {'appID': appID,
-                                'appCategory': appCategory}
+            self.data[appID] = App_Item(appID, appCategory)
         fin.close()
 
     def get_keys(self):
@@ -26,7 +29,7 @@ class App:
     def exists(self, key):
         return key in self.data
 
-    def add_dataset(self, record, appCategory):
+    def add_dataset(self, record : Dataset_Item, appCategory):
         if appCategory not in self.dataset_app_cat:
             self.dataset_app_cat[appCategory] = list()
         self.dataset_app_cat[appCategory].append(record)
